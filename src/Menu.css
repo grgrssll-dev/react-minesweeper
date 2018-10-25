@@ -1,0 +1,67 @@
+.menu {
+	background: var(--system-bg);
+	box-sizing: border-box;
+	height: 1.5rem;
+	padding: 0.375rem;
+	position: relative;
+	font-size: 0;
+}
+
+.menu--item {
+	margin: 0;
+	padding: 0;
+	font-size: 0;
+}
+
+.menu--item > li {
+	color: var(--system-text);
+	cursor: default;
+	display: inline-block;
+	font-size: 0.75rem;
+	line-height: 1;
+	vertical-align: baseline;
+}
+
+.menu--submenu {
+	background: var(--system-bg);
+	border-bottom-color: var(--system-border-dark);
+	border-left-color: var(--system-border-light);
+	border-right-color: var(--system-border-dark);
+	border-style: solid;
+	border-top-color: var(--system-border-light);
+	border-width: 1px;
+	left: 0;
+	margin: 0;
+	min-width: 9rem;
+	padding: 0;
+	position: absolute;
+	top: 100%;
+}
+.menu--submenu > li {
+	box-sizing: border-box;
+	cursor: default;
+	font-size: 0.75rem;
+	list-style-type: none;
+	padding: 0.375rem 0.375rem 0.375rem 1.375rem;
+	position: relative;
+}
+
+.menu--submenu > li.selected::before {
+	content: '✓';
+	display: block;
+	position: absolute;
+	top: 0.375rem;
+	left: 0.375rem;
+}
+
+.menu--divider-bottom::after {
+	content: '';
+	display: block;
+	position: absolute;
+	top: 100%;
+	left: 0.125rem;
+	width: calc(100% - 0.25rem);
+	height: 0;
+	border-top: 0.0625rem var(--system-border-dark) solid;
+	border-bottom: 0.0625rem var(--system-border-light) solid;
+}
