@@ -283,9 +283,10 @@ class App extends Component {
 
 	render() {
 		const { data, level, minesFlagged, timeElapsed, isGameOver } = this.state;
+		const appLevelClass = `app-${level.name.toLowerCase()}`;
 		console.log('-- app render');
 		return (
-			<div className="app">
+			<div className={`app ${appLevelClass}`}>
 				<Menu levels={Levels}
 					currentLevel={level}
 					onLevelChange={this._onLevelChangeBound}
