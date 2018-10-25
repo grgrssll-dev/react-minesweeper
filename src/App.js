@@ -47,9 +47,9 @@ class App extends Component {
 
 	_generateGameData(level) {
 		let data = [];
-		for (let x = 0; x < level.rows; x++) {
+		for (let y = 0; y < level.rows; y++) {
 			let row = [];
-			for (let y = 0; y < level.cols; y++) {
+			for (let x = 0; x < level.cols; x++) {
 				row.push({
 					x: x,
 					y: y,
@@ -85,10 +85,10 @@ class App extends Component {
 	_onMineFlag(x, y) {
 		console.log('@ flag', x, y);
 		const { data, level } = this.state;
-		const cell = data[x][y];
+		const cell = data[y][x];
 		const wasFlagged = cell.isFlagged;
 		if (!cell.isRevealed) {
-			data[x][y].isFlagged = !wasFlagged;
+			data[y][x].isFlagged = !wasFlagged;
 			const countStep = (wasFlagged) ? -1 : 1;
 			this.setState((state) => {
 				return {
@@ -116,18 +116,18 @@ class App extends Component {
 				data = this._setMines(x, y);
 				data = this._setValues(data);
 			}
-			console.log('clicked', x, y, data[x][y]);
-			if (!data[x][y].isFlagged) {
-				const number = data[x][y].number;
+			console.log('clicked', x, y, data[y][x]);
+			if (!data[y][x].isFlagged) {
+				const number = data[y][x].number;
 				if (number === -1) {
 					// lose
 					console.error('bombs away');
-					data[x][y].triggered = true;
+					data[y][x].triggered = true;
 					this._endGame(true);
 				} else {
-					data[x][y].isRevealed = true;
+					data[y][x].isRevealed = true;
 					if (number === 0) {
-						data = this._spreadClick(data[x][y], data);
+						data = this._spreadClick(data[y][x], data);
 					}
 				}
 				// todo spread open 0s
@@ -146,10 +146,10 @@ class App extends Component {
 		const { level, data } = this.state;
 		let mines = level.mines;
 		while (mines > 0) {
-			let randX = Utils.random(level.rows - 1);
-			let randY = Utils.random(level.cols - 1);
-			if (randX !== x && randY !== y && data[randX][randY].number > -1) {
-				data[randX][randY].number = -1;
+			let randX = Utils.random(level.cols - 1);
+			let randY = Utils.random(level.rows - 1);
+			if (randX !== x && randY !== y && data[randY][randX].number > -1) {
+				data[randY][randX].number = -1;
 				mines--;
 			}
 		}
@@ -174,41 +174,41 @@ class App extends Component {
 		const { level } = this.state;
 		const neighbors = [];
 		const hasTop = cell.y > 0;
-		const hasBottom = cell.y < level.rows - 1;
+		const hasBottom = cell.y < (level.rows - 1);
 		const hasLeft = cell.x > 0;
-		const hasRight = cell.x < level.cols - 1;
+		const hasRight = cell.x < (level.cols - 1);
 		if (hasTop) {
 			let yTop = cell.y - 1;
 			// top
-			neighbors.push(data[cell.x][yTop]);
+			neighbors.push(data[yTop][cell.x]);
 			// top left
 			if (hasLeft) {
-				neighbors.push(data[cell.x - 1][yTop]);
+				neighbors.push(data[yTop][cell.x - 1]);
 			}
 			// top right
 			if (hasRight) {
-				neighbors.push(data[cell.x + 1][yTop]);
+				neighbors.push(data[yTop][cell.x + 1]);
 			}
 		}
 		// left
 		if (hasLeft) {
-			neighbors.push(data[cell.x - 1][cell.y]);
+			neighbors.push(data[cell.y][cell.x - 1]);
 		}
 		// right
 		if (hasRight) {
-			neighbors.push(data[cell.x + 1][cell.y]);
+			neighbors.push(data[cell.y][cell.x + 1]);
 		}
 		if (hasBottom) {
 			let yBottom = cell.y + 1;
 			// bottom
-			neighbors.push(data[cell.x][yBottom]);
+			neighbors.push(data[yBottom][cell.x]);
 			// bottom left
 			if (hasLeft) {
-				neighbors.push(data[cell.x - 1][yBottom]);
+				neighbors.push(data[yBottom][cell.x - 1]);
 			}
 			// bottom right
 			if (hasRight) {
-				neighbors.push(data[cell.x + 1][yBottom]);
+				neighbors.push(data[yBottom][cell.x + 1]);
 			}
 		}
 		return neighbors;
@@ -220,7 +220,7 @@ class App extends Component {
 
 	_spreadClick(cell, data) {
 		this._getNonMineNeighbors(cell, data).forEach((c) => {
-			data[c.x][c.y].isRevealed = true;
+			data[c.y][c.x].isRevealed = true;
 			if (c.number === 0) {
 				data = this._spreadClick(c, data);
 			}
