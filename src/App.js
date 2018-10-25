@@ -234,8 +234,9 @@ class App extends Component {
 		if (!isGameOver && !this._timerInterval) {
 			this._timerInterval = setInterval(() => {
 				this.setState((state) => {
+					const newTime = state.timeElapsed + 1;
 					return {
-						timeElapsed: state.timeElapsed + 1
+						timeElapsed: Math.min(newTime, 999)
 					};
 				});
 			}, 1000);
