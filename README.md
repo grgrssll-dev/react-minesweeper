@@ -4,9 +4,8 @@ Tried to get all of the features in there, but still don't have the one where yo
 
 Try it out https://www.grgrssll.com/minesweeper/
 
-
-
 TODO
-- convert app.js to sytled component
+
+- write tests
 - double button click clear behavior
 - rework to not render so much
