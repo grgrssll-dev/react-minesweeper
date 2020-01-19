@@ -6,10 +6,12 @@ module.exports = {
 		'/jest/',
 		'/node_modules/',
 	],
-	//   globals: {
-	//     __DEVELOPMENT__: true,
-	//     __TEST__: true,
-	//   },
-	testEnvironment: 'node',
+	testEnvironment: 'jsdom',
 	verbose: true,
+	testPathIgnorePatterns: [
+		'<rootDir>/node_modules/',
+		'<rootDir>/lib/',
+	],
+	setupFilesAfterEnv: ['<rootDir>/tests/enzymeConfig.js'],
+	snapshotSerializers: ['enzyme-to-json/serializer'],
 };
