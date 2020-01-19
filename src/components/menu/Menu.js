@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import styled from '@emotion/styled';
+import { levelType } from '../../propTypes';
 
 function menu(props) {
 	console.log('-- menu render');
 	const [isMenuOpen, setMenuOpen] = useState(false);
-	const { levels, currentLevel, onLevelChange, onNewGame } = props;
+	const {
+		levels,
+		currentLevel,
+		onLevelChange,
+		onNewGame,
+		className,
+	} = props;
 
 	const toggleMenu = () => {
 		setMenuOpen(!isMenuOpen);
@@ -14,25 +22,35 @@ function menu(props) {
 		setMenuOpen(false);
 	};
 
+	const newGame = () => {
+		closeMenu();
+		onNewGame();
+	};
+
+	const levelChanger = (level) => () => {
+		closeMenu();
+		onLevelChange(level);
+	};
+
 	return (
-		<div className={`${props.className} menu`}>
+		<div className={`${className} menu`}>
 			<ul className="menu__item">
-				<li onClick={toggleMenu}>Game</li>
+				<li>
+					<button type="button" onClick={toggleMenu}>Game</button>
+				</li>
 				{isMenuOpen && (
 					<ul className="menu__submenu">
-						<li className="menu__divider-bottom"
-							onClick={() => {
-								closeMenu();
-								onNewGame();
-							}}>New</li>
+						<li className="menu__divider-bottom">
+							<button type="button"
+								onClick={newGame}>New</button>
+						</li>
 						{Object.values(levels).map((level) => {
 							return (
 								<li key={level.name}
-									onClick={() => {
-										closeMenu();
-										onLevelChange(level)
-									}}
-									className={level.name === currentLevel.name ? 'menu__item--selected' : ''}>{level.name}</li>
+									className={level.name === currentLevel.name ? 'menu__item--selected' : ''}>
+									<button type="button"
+										onClick={levelChanger(level)}>{level.name}</button>
+								</li>
 							);
 						})}
 					</ul>
@@ -42,6 +60,14 @@ function menu(props) {
 	);
 }
 
+menu.propTypes = {
+	levels: PropTypes.arrayOf(levelType).isRequired,
+	currentLevel: levelType.isRequired,
+	onLevelChange: PropTypes.func.isRequired,
+	onNewGame: PropTypes.func.isRequired,
+	className: PropTypes.string.isRequired,
+}
+
 export default styled(menu)`
 	background: var(--system-bg);
 	box-sizing: border-box;
@@ -49,6 +75,12 @@ export default styled(menu)`
 	padding: 0.375rem;
 	position: relative;
 	font-size: 0;
+
+	& button {
+		background: transparent;
+		border: 0;
+		padding: 0;
+	}
 
 	.menu__item {
 		margin: 0;

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import styled from '@emotion/styled';
 import { FLAG, ERROR, MINE } from '../../icons';
 
@@ -12,6 +13,7 @@ function cell(props) {
 		isRevealed,
 		onCellClick,
 		isGameOver,
+		className,
 	} = props;
 
 	const getValue = () => {
@@ -34,7 +36,8 @@ function cell(props) {
 
 	// console.log('-- cell render', y, x);
 	return (
-		<button className={`${props.className} cell ${triggered ? 'cell--triggered' : ''}`}
+		<button className={`${className} cell ${triggered ? 'cell--triggered' : ''}`}
+			type="button"
 			data-number={number}
 			onClick={(e) => {
 				onCellClick(isRightClick(e), x, y);
@@ -52,6 +55,18 @@ function cell(props) {
 		</button>
 	);
 }
+
+cell.propTypes = {
+	triggered: PropTypes.bool.isRequired,
+	x: PropTypes.number.isRequired,
+	y: PropTypes.number.isRequired,
+	number: PropTypes.number.isRequired,
+	isFlagged: PropTypes.bool.isRequired,
+	isRevealed: PropTypes.bool.isRequired,
+	onCellClick: PropTypes.func.isRequired,
+	isGameOver: PropTypes.bool.isRequired,
+	className: PropTypes.string.isRequired,
+};
 
 export default styled(cell)`
 	background: var(--game-bg);

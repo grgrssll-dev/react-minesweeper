@@ -1,14 +1,23 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import styled from '@emotion/styled';
 
 function gameValue(props) {
-	const { value } = props;
+	const {
+		value,
+		className,
+	} = props;
 	return (
-		<div className={`${props.className} menu-number`}>
+		<div className={`${className} menu-number`}>
 			<span>{`${value || ''}`.padStart(3, '0')}</span>
 		</div>
 	);
 }
+
+gameValue.propTypes = {
+	value: PropTypes.string.isRequired,
+	className: PropTypes.string.isRequired,
+};
 
 export default styled(gameValue)`
 	background: black;

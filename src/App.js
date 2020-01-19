@@ -29,11 +29,12 @@ const generateGameData = (level) => {
 		const row = [];
 		for (let x = 0; x < level.cols; x++) {
 			row.push({
-				x: x,
-				y: y,
+				x,
+				y,
 				isRevealed: false,
 				isFlagged: false,
-				number: 0
+				number: 0,
+				triggered: false,
 			});
 		}
 		cellData.push(row);
@@ -49,6 +50,41 @@ function app() {
 	const [isGameOver, setGameOver] = useState(false);
 	const [data, setData] = useState(generateGameData(initialLevel));
 
+	const reveal = () => {
+		console.log('reveal board');
+		setGameOver(true);
+		setData(data.map((row) => row.map((cell) => ({
+			...cell,
+			isRevealed: true
+		}))));
+	};
+
+	const endGame = () => {
+		console.log('## end game ##');
+		clearInterval(timerInterval);
+		timerInterval = null;
+		startTime = null;
+		setGameOver(true);
+		reveal();
+	}
+
+	const resetGame = (callback) => {
+		console.log('reset game');
+		setMinesFlagged(0);
+		setTimeElapsed(0);
+		setGameOver(false);
+		setClicks(0);
+		setData(generateGameData(level));
+		if (typeof callback === 'function') {
+			callback();
+		}
+	};
+
+	const onNewGame = () => {
+		console.log('new game');
+		endGame();
+		resetGame();
+	};
 
 	const onLevelChange = (newLevel) => {
 		console.log('level change', newLevel);
@@ -56,12 +92,6 @@ function app() {
 		setLevel(newLevel);
 		setData(generateGameData(newLevel));
 		localStorage.setItem(LEVEL_LABEL, JSON.stringify(newLevel));
-	};
-
-	const onNewGame = () => {
-		console.log('new game');
-		endGame();
-		resetGame();
 	};
 
 	const onGameStart = () => {
@@ -82,6 +112,104 @@ function app() {
 					endGame();
 				}
 			}
+		}
+	};
+
+	const setMines = (x, y) => {
+		const { cols, rows } = level;
+		let { mines } = level;
+		while (mines > 0) {
+			const randX = Utils.random(cols - 1);
+			const randY = Utils.random(rows - 1);
+			if (randX !== x && randY !== y && data[randY][randX].number > -1) {
+				data[randY][randX].number = -1;
+				mines--;
+			}
+		}
+	};
+
+	const getNeighbors = (cell, gameData) => {
+		const neighbors = [];
+		const hasTop = cell.y > 0;
+		const hasBottom = cell.y < (level.rows - 1);
+		const hasLeft = cell.x > 0;
+		const hasRight = cell.x < (level.cols - 1);
+		if (hasTop) {
+			const yTop = cell.y - 1;
+			// top
+			neighbors.push(gameData[yTop][cell.x]);
+			// top left
+			if (hasLeft) {
+				neighbors.push(gameData[yTop][cell.x - 1]);
+			}
+			// top right
+			if (hasRight) {
+				neighbors.push(gameData[yTop][cell.x + 1]);
+			}
+		}
+		// left
+		if (hasLeft) {
+			neighbors.push(gameData[cell.y][cell.x - 1]);
+		}
+		// right
+		if (hasRight) {
+			neighbors.push(gameData[cell.y][cell.x + 1]);
+		}
+		if (hasBottom) {
+			const yBottom = cell.y + 1;
+			// bottom
+			neighbors.push(gameData[yBottom][cell.x]);
+			// bottom left
+			if (hasLeft) {
+				neighbors.push(gameData[yBottom][cell.x - 1]);
+			}
+			// bottom right
+			if (hasRight) {
+				neighbors.push(gameData[yBottom][cell.x + 1]);
+			}
+		}
+		return neighbors;
+	};
+
+	const setValues = (gameData) => {
+		for (let y = 0; y < gameData.length; y++) {
+			for (let x = 0; x < gameData[y].length; x++) {
+				if (gameData[y][x].number > -1) {
+					/* eslint-disable no-param-reassign */
+					gameData[y][x].number = getNeighbors(gameData[y][x], gameData).reduce((acc, n) => {
+						return acc + ((n.number === -1) ? 1 : 0);
+					}, 0);
+					/* eslint-enable no-param-reassign */
+				}
+			}
+		}
+	};
+
+	const getNonMineNeighbors = (cell, gameData) => {
+		return getNeighbors(cell, gameData).filter((c) => c.number !== -1 && !c.isRevealed && !c.isFlagged);
+	};
+
+	const spreadClick = (cell, gameData) => {
+		// console.log('spreadClick', cell, gameData);
+		getNonMineNeighbors(cell, gameData).forEach((c) => {
+			/* eslint-disable no-param-reassign */
+			gameData[c.y][c.x].isRevealed = true;
+			if (c.number === 0) {
+				spreadClick(c, gameData);
+			}
+			/* eslint-enable no-param-reassign */
+		});
+	};
+
+	const startGame = () => {
+		console.log('** start game **');
+		if (!isGameOver && !timerInterval && !startTime) {
+			startTime = Date.now();
+			clearInterval(timerInterval);
+			timerInterval = setInterval(() => {
+				const newTime = Math.floor((Date.now() - startTime) / 1000);
+				setTimeElapsed(Math.min(newTime, 999));
+			}, 1000);
 		}
 	};
 
@@ -115,129 +243,6 @@ function app() {
 			setClicks(clicks + 1);
 		}
 	};
-
-	const setMines = (x, y) => {
-		let { mines, cols, rows } = level;
-		while (mines > 0) {
-			let randX = Utils.random(cols - 1);
-			let randY = Utils.random(rows - 1);
-			if (randX !== x && randY !== y && data[randY][randX].number > -1) {
-				data[randY][randX].number = -1;
-				mines--;
-			}
-		}
-	};
-
-	const setValues = (data) => {
-		for (let y = 0; y < data.length; y++) {
-			for (let x = 0; x < data[y].length; x++) {
-				if (data[y][x].number > -1) {
-					data[y][x].number = getNeighbors(data[y][x], data).reduce((acc, n) => {
-						return acc + ((n.number === -1) ? 1 : 0);
-					}, 0);
-				}
-			}
-		}
-	};
-
-	const getNeighbors = (cell, data) => {
-		const neighbors = [];
-		const hasTop = cell.y > 0;
-		const hasBottom = cell.y < (level.rows - 1);
-		const hasLeft = cell.x > 0;
-		const hasRight = cell.x < (level.cols - 1);
-		if (hasTop) {
-			let yTop = cell.y - 1;
-			// top
-			neighbors.push(data[yTop][cell.x]);
-			// top left
-			if (hasLeft) {
-				neighbors.push(data[yTop][cell.x - 1]);
-			}
-			// top right
-			if (hasRight) {
-				neighbors.push(data[yTop][cell.x + 1]);
-			}
-		}
-		// left
-		if (hasLeft) {
-			neighbors.push(data[cell.y][cell.x - 1]);
-		}
-		// right
-		if (hasRight) {
-			neighbors.push(data[cell.y][cell.x + 1]);
-		}
-		if (hasBottom) {
-			let yBottom = cell.y + 1;
-			// bottom
-			neighbors.push(data[yBottom][cell.x]);
-			// bottom left
-			if (hasLeft) {
-				neighbors.push(data[yBottom][cell.x - 1]);
-			}
-			// bottom right
-			if (hasRight) {
-				neighbors.push(data[yBottom][cell.x + 1]);
-			}
-		}
-		return neighbors;
-	};
-
-	const getNonMineNeighbors = (cell, data) => {
-		return getNeighbors(cell, data).filter((c) => c.number !== -1 && !c.isRevealed && !c.isFlagged);
-	};
-
-	const spreadClick = (cell, data) => {
-		// console.log('spreadClick', cell, data);
-		getNonMineNeighbors(cell, data).forEach((c) => {
-			data[c.y][c.x].isRevealed = true;
-			if (c.number === 0) {
-				spreadClick(c, data);
-			}
-		});
-	};
-
-	const startGame = () => {
-		console.log('** start game **');
-		if (!isGameOver && !timerInterval && !startTime) {
-			startTime = Date.now();
-			clearInterval(timerInterval);
-			timerInterval = setInterval(() => {
-				const newTime = Math.floor((Date.now() - startTime) / 1000);
-				setTimeElapsed(Math.min(newTime, 999));
-			}, 1000);
-		}
-	};
-
-	const endGame = () => {
-		console.log('## end game ##');
-		clearInterval(timerInterval);
-		timerInterval = null;
-		startTime = null;
-		setGameOver(true);
-		reveal();
-	}
-
-	const resetGame = (callback) => {
-		console.log('reset game');
-		setMinesFlagged(0);
-		setTimeElapsed(0);
-		setGameOver(false);
-		setClicks(0);
-		setData(generateGameData(level));
-		if (typeof callback === 'function') {
-			callback();
-		}
-	};
-
-	const reveal = () => {
-		console.log('reveal board');
-		setGameOver(true);
-		setData(data.map((row) => row.map((cell) => ({
-			...cell,
-			isRevealed: true
-		}))));
-	}
 
 	console.log('-- app render');
 	return (
