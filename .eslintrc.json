@@ -13,6 +13,12 @@
     "no-bitwise": 0,
     "no-else-return": 0,
     "import/prefer-default-export": 0,
+    "no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "_"
+      }
+    ],
     "max-len": [
       "error",
       {

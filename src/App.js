@@ -23,6 +23,7 @@ function app(props) {
 	const [isGameOver, setGameOver] = useState(false);
 	const [data, setData] = useState(Utils.generateGameData(initialLevel));
 
+
 	const startGame = () => {
 		console.log('** start game **');
 		if (!isGameOver && !timerInterval && !startTime) {
@@ -92,7 +93,7 @@ function app(props) {
 			const cell = data[y][x];
 			if (clicks === 0) {
 				console.log('First click! set cell data, can\'t have a mine on first click...');
-				Utils.setMines(level, x, y);
+				Utils.setMines(level, x, y, data);
 				Utils.setValues(level, data);
 			}
 			console.log('clicked', x, y, cell, clicks);
