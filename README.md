@@ -3,3 +3,10 @@
 Tried to get all of the features in there, but still don't have the one where you double click to open cells adjacent to a fully marked numbered cell...
 
 Try it out https://www.grgrssll.com/minesweeper/
+
+
+
+TODO
+- convert app.js to sytled component
+- double button click clear behavior
+- rework to not render so much

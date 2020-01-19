@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import styled from '@emotion/styled';
 import { FLAG, MINE } from './icons';
-import './App.css';
 
 import Menu from './components/menu/Menu';
 import Heading from './components/heading/Heading';
@@ -13,12 +14,10 @@ const defaultLevel = Levels.find((l) => l.name === 'Beginner');
 const LEVEL_LABEL = 'DEFAULT_LEVEL';
 
 let savedLevel = null;
-if (savedLevel) {
-	try {
-		savedLevel = JSON.parse(localStorage.getItem(LEVEL_LABEL));
-	} catch (err) {
-		savedLevel = null;
-	}
+try {
+	savedLevel = JSON.parse(localStorage.getItem(LEVEL_LABEL));
+} catch (err) {
+	savedLevel = null;
 }
 
 const initialLevel = savedLevel || defaultLevel;
@@ -31,11 +30,12 @@ const generateGameData = (level) => {
 		const row = [];
 		for (let x = 0; x < level.cols; x++) {
 			row.push({
-				x: x,
-				y: y,
+				x,
+				y,
 				isRevealed: false,
 				isFlagged: false,
-				number: 0
+				number: 0,
+				triggered: false,
 			});
 		}
 		cellData.push(row);
@@ -44,6 +44,7 @@ const generateGameData = (level) => {
 };
 
 function app(props) {
+	const { className } = props;
 	const [level, setLevel] = useState(initialLevel);
 	const [minesFlagged, setMinesFlagged] = useState(0);
 	const [timeElapsed, setTimeElapsed] = useState(0);
@@ -51,6 +52,41 @@ function app(props) {
 	const [isGameOver, setGameOver] = useState(false);
 	const [data, setData] = useState(generateGameData(initialLevel));
 
+	const reveal = () => {
+		console.log('reveal board');
+		setGameOver(true);
+		setData(data.map((row) => row.map((cell) => ({
+			...cell,
+			isRevealed: true
+		}))));
+	};
+
+	const endGame = () => {
+		console.log('## end game ##');
+		clearInterval(timerInterval);
+		timerInterval = null;
+		startTime = null;
+		setGameOver(true);
+		reveal();
+	}
+
+	const resetGame = (callback) => {
+		console.log('reset game');
+		setMinesFlagged(0);
+		setTimeElapsed(0);
+		setGameOver(false);
+		setClicks(0);
+		setData(generateGameData(level));
+		if (typeof callback === 'function') {
+			callback();
+		}
+	};
+
+	const onNewGame = () => {
+		console.log('new game');
+		endGame();
+		resetGame();
+	};
 
 	const onLevelChange = (newLevel) => {
 		console.log('level change', newLevel);
@@ -58,12 +94,6 @@ function app(props) {
 		setLevel(newLevel);
 		setData(generateGameData(newLevel));
 		localStorage.setItem(LEVEL_LABEL, JSON.stringify(newLevel));
-	};
-
-	const onNewGame = () => {
-		console.log('new game');
-		endGame();
-		resetGame();
 	};
 
 	const onGameStart = () => {
@@ -84,6 +114,104 @@ function app(props) {
 					endGame();
 				}
 			}
+		}
+	};
+
+	const setMines = (x, y) => {
+		const { cols, rows } = level;
+		let { mines } = level;
+		while (mines > 0) {
+			const randX = Utils.random(cols - 1);
+			const randY = Utils.random(rows - 1);
+			if (randX !== x && randY !== y && data[randY][randX].number > -1) {
+				data[randY][randX].number = -1;
+				mines--;
+			}
+		}
+	};
+
+	const getNeighbors = (cell, gameData) => {
+		const neighbors = [];
+		const hasTop = cell.y > 0;
+		const hasBottom = cell.y < (level.rows - 1);
+		const hasLeft = cell.x > 0;
+		const hasRight = cell.x < (level.cols - 1);
+		if (hasTop) {
+			const yTop = cell.y - 1;
+			// top
+			neighbors.push(gameData[yTop][cell.x]);
+			// top left
+			if (hasLeft) {
+				neighbors.push(gameData[yTop][cell.x - 1]);
+			}
+			// top right
+			if (hasRight) {
+				neighbors.push(gameData[yTop][cell.x + 1]);
+			}
+		}
+		// left
+		if (hasLeft) {
+			neighbors.push(gameData[cell.y][cell.x - 1]);
+		}
+		// right
+		if (hasRight) {
+			neighbors.push(gameData[cell.y][cell.x + 1]);
+		}
+		if (hasBottom) {
+			const yBottom = cell.y + 1;
+			// bottom
+			neighbors.push(gameData[yBottom][cell.x]);
+			// bottom left
+			if (hasLeft) {
+				neighbors.push(gameData[yBottom][cell.x - 1]);
+			}
+			// bottom right
+			if (hasRight) {
+				neighbors.push(gameData[yBottom][cell.x + 1]);
+			}
+		}
+		return neighbors;
+	};
+
+	const setValues = (gameData) => {
+		for (let y = 0; y < gameData.length; y++) {
+			for (let x = 0; x < gameData[y].length; x++) {
+				if (gameData[y][x].number > -1) {
+					/* eslint-disable no-param-reassign */
+					gameData[y][x].number = getNeighbors(gameData[y][x], gameData).reduce((acc, n) => {
+						return acc + ((n.number === -1) ? 1 : 0);
+					}, 0);
+					/* eslint-enable no-param-reassign */
+				}
+			}
+		}
+	};
+
+	const getNonMineNeighbors = (cell, gameData) => {
+		return getNeighbors(cell, gameData).filter((c) => c.number !== -1 && !c.isRevealed && !c.isFlagged);
+	};
+
+	const spreadClick = (cell, gameData) => {
+		// console.log('spreadClick', cell, gameData);
+		getNonMineNeighbors(cell, gameData).forEach((c) => {
+			/* eslint-disable no-param-reassign */
+			gameData[c.y][c.x].isRevealed = true;
+			if (c.number === 0) {
+				spreadClick(c, gameData);
+			}
+			/* eslint-enable no-param-reassign */
+		});
+	};
+
+	const startGame = () => {
+		console.log('** start game **');
+		if (!isGameOver && !timerInterval && !startTime) {
+			startTime = Date.now();
+			clearInterval(timerInterval);
+			timerInterval = setInterval(() => {
+				const newTime = Math.floor((Date.now() - startTime) / 1000);
+				setTimeElapsed(Math.min(newTime, 999));
+			}, 1000);
 		}
 	};
 
@@ -118,137 +246,14 @@ function app(props) {
 		}
 	};
 
-	const setMines = (x, y) => {
-		let { mines, cols, rows } = level;
-		while (mines > 0) {
-			let randX = Utils.random(cols - 1);
-			let randY = Utils.random(rows - 1);
-			if (randX !== x && randY !== y && data[randY][randX].number > -1) {
-				data[randY][randX].number = -1;
-				mines--;
-			}
-		}
-	};
-
-	const setValues = (data) => {
-		for (let y = 0; y < data.length; y++) {
-			for (let x = 0; x < data[y].length; x++) {
-				if (data[y][x].number > -1) {
-					data[y][x].number = getNeighbors(data[y][x], data).reduce((acc, n) => {
-						return acc + ((n.number === -1) ? 1 : 0);
-					}, 0);
-				}
-			}
-		}
-	};
-
-	const getNeighbors = (cell, data) => {
-		const neighbors = [];
-		const hasTop = cell.y > 0;
-		const hasBottom = cell.y < (level.rows - 1);
-		const hasLeft = cell.x > 0;
-		const hasRight = cell.x < (level.cols - 1);
-		if (hasTop) {
-			let yTop = cell.y - 1;
-			// top
-			neighbors.push(data[yTop][cell.x]);
-			// top left
-			if (hasLeft) {
-				neighbors.push(data[yTop][cell.x - 1]);
-			}
-			// top right
-			if (hasRight) {
-				neighbors.push(data[yTop][cell.x + 1]);
-			}
-		}
-		// left
-		if (hasLeft) {
-			neighbors.push(data[cell.y][cell.x - 1]);
-		}
-		// right
-		if (hasRight) {
-			neighbors.push(data[cell.y][cell.x + 1]);
-		}
-		if (hasBottom) {
-			let yBottom = cell.y + 1;
-			// bottom
-			neighbors.push(data[yBottom][cell.x]);
-			// bottom left
-			if (hasLeft) {
-				neighbors.push(data[yBottom][cell.x - 1]);
-			}
-			// bottom right
-			if (hasRight) {
-				neighbors.push(data[yBottom][cell.x + 1]);
-			}
-		}
-		return neighbors;
-	};
-
-	const getNonMineNeighbors = (cell, data) => {
-		return getNeighbors(cell, data).filter((c) => c.number !== -1 && !c.isRevealed && !c.isFlagged);
-	};
-
-	const spreadClick = (cell, data) => {
-		// console.log('spreadClick', cell, data);
-		getNonMineNeighbors(cell, data).forEach((c) => {
-			data[c.y][c.x].isRevealed = true;
-			if (c.number === 0) {
-				spreadClick(c, data);
-			}
-		});
-	};
-
-	const startGame = () => {
-		console.log('** start game **');
-		if (!isGameOver && !timerInterval && !startTime) {
-			startTime = Date.now();
-			clearInterval(timerInterval);
-			timerInterval = setInterval(() => {
-				const newTime = Math.floor((Date.now() - startTime) / 1000);
-				setTimeElapsed(Math.min(newTime, 999));
-			}, 1000);
-		}
-	};
-
-	const endGame = () => {
-		console.log('## end game ##');
-		clearInterval(timerInterval);
-		timerInterval = null;
-		startTime = null;
-		setGameOver(true);
-		reveal();
-	}
-
-	const resetGame = (callback) => {
-		console.log('reset game');
-		setMinesFlagged(0);
-		setTimeElapsed(0);
-		setGameOver(false);
-		setClicks(0);
-		setData(generateGameData(level));
-		if (typeof callback === 'function') {
-			callback();
-		}
-	};
-
-	const reveal = () => {
-		console.log('reveal board');
-		setGameOver(true);
-		setData(data.map((row) => row.map((cell) => ({
-			...cell,
-			isRevealed: true
-		}))));
-	}
-
 	console.log('-- app render');
 	return (
-		<div className={`app app-${level.name.toLowerCase()}`}>
+		<div className={`${className} app app--${level.name.toLowerCase()}`}>
 			<Menu levels={Levels}
 				currentLevel={level}
 				onLevelChange={onLevelChange}
 				onNewGame={onNewGame} />
-			<div className="app--game-wrapper" data-game-over={isGameOver}>
+			<div className="app__game-wrapper" data-game-over={isGameOver}>
 				<Heading minesRemaining={level.mines - minesFlagged}
 					timeElapsed={timeElapsed}
 					onGameStart={onGameStart}
@@ -264,4 +269,39 @@ function app(props) {
 	);
 }
 
-export default app;
+app.propTypes = {
+	className: PropTypes.string.isRequired,
+};
+
+export default styled(app)`
+	border: 0.0625rem var(--system-bg) solid;
+	display: inline-block;
+	width: auto;
+	user-select: none;
+
+	.app__game-wrapper {
+		background: var(--game-bg);
+		border-color: var(--game-border-light);
+		border-style: solid;
+		border-left-width: 0.1875rem;
+		border-top-width: 0.1875rem;
+		border-right-width: 0;
+		border-bottom-width: 0;
+		padding: 0.375rem;
+	}
+
+	&.app--expert {
+		width: 31.3125rem;
+		height: 21.0625rem;
+	}
+
+	&.app--intermediate {
+		width: 17.3125rem;
+		height: 21.0625rem;
+	}
+
+	&.app--beginner {
+		width: 11.3125rem;
+		height: 15.0625rem;
+	}
+`;
