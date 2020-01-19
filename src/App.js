@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import styled from '@emotion/styled';
 import { FLAG, MINE } from './icons';
-import './App.css';
 
 import Menu from './components/menu/Menu';
 import Heading from './components/heading/Heading';
@@ -42,7 +43,8 @@ const generateGameData = (level) => {
 	return cellData;
 };
 
-function app() {
+function app(props) {
+	const { className } = props;
 	const [level, setLevel] = useState(initialLevel);
 	const [minesFlagged, setMinesFlagged] = useState(0);
 	const [timeElapsed, setTimeElapsed] = useState(0);
@@ -246,12 +248,12 @@ function app() {
 
 	console.log('-- app render');
 	return (
-		<div className={`app app-${level.name.toLowerCase()}`}>
+		<div className={`${className} app app--${level.name.toLowerCase()}`}>
 			<Menu levels={Levels}
 				currentLevel={level}
 				onLevelChange={onLevelChange}
 				onNewGame={onNewGame} />
-			<div className="app--game-wrapper" data-game-over={isGameOver}>
+			<div className="app__game-wrapper" data-game-over={isGameOver}>
 				<Heading minesRemaining={level.mines - minesFlagged}
 					timeElapsed={timeElapsed}
 					onGameStart={onGameStart}
@@ -267,4 +269,39 @@ function app() {
 	);
 }
 
-export default app;
+app.propTypes = {
+	className: PropTypes.string.isRequired,
+};
+
+export default styled(app)`
+	border: 0.0625rem var(--system-bg) solid;
+	display: inline-block;
+	width: auto;
+	user-select: none;
+
+	.app__game-wrapper {
+		background: var(--game-bg);
+		border-color: var(--game-border-light);
+		border-style: solid;
+		border-left-width: 0.1875rem;
+		border-top-width: 0.1875rem;
+		border-right-width: 0;
+		border-bottom-width: 0;
+		padding: 0.375rem;
+	}
+
+	&.app--expert {
+		width: 31.3125rem;
+		height: 21.0625rem;
+	}
+
+	&.app--intermediate {
+		width: 17.3125rem;
+		height: 21.0625rem;
+	}
+
+	&.app--beginner {
+		width: 11.3125rem;
+		height: 15.0625rem;
+	}
+`;
