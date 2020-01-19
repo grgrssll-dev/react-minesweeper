@@ -10,38 +10,9 @@ import Board from './components/board/Board';
 import Levels from './Levels';
 import Utils from './Utils';
 
-const defaultLevel = Levels.find((l) => l.name === 'Beginner');
-const LEVEL_LABEL = 'DEFAULT_LEVEL';
-
-let savedLevel = null;
-try {
-	savedLevel = JSON.parse(localStorage.getItem(LEVEL_LABEL));
-} catch (err) {
-	savedLevel = null;
-}
-
-const initialLevel = savedLevel || defaultLevel;
+const initialLevel = Utils.getSavedLevel() || Levels.find((l) => l.name === 'Beginner');
 let timerInterval = null;
 let startTime = null;
-
-const generateGameData = (level) => {
-	const cellData = [];
-	for (let y = 0; y < level.rows; y++) {
-		const row = [];
-		for (let x = 0; x < level.cols; x++) {
-			row.push({
-				x,
-				y,
-				isRevealed: false,
-				isFlagged: false,
-				number: 0,
-				triggered: false,
-			});
-		}
-		cellData.push(row);
-	}
-	return cellData;
-};
 
 function app(props) {
 	const { className } = props;
@@ -50,7 +21,7 @@ function app(props) {
 	const [timeElapsed, setTimeElapsed] = useState(0);
 	const [clicks, setClicks] = useState(0);
 	const [isGameOver, setGameOver] = useState(false);
-	const [data, setData] = useState(generateGameData(initialLevel));
+	const [data, setData] = useState(Utils.generateGameData(initialLevel));
 
 	const reveal = () => {
 		console.log('reveal board');
@@ -70,16 +41,13 @@ function app(props) {
 		reveal();
 	}
 
-	const resetGame = (callback) => {
+	const resetGame = () => {
 		console.log('reset game');
 		setMinesFlagged(0);
 		setTimeElapsed(0);
 		setGameOver(false);
 		setClicks(0);
-		setData(generateGameData(level));
-		if (typeof callback === 'function') {
-			callback();
-		}
+		setData(Utils.generateGameData(level));
 	};
 
 	const onNewGame = () => {
@@ -92,8 +60,8 @@ function app(props) {
 		console.log('level change', newLevel);
 		onNewGame();
 		setLevel(newLevel);
-		setData(generateGameData(newLevel));
-		localStorage.setItem(LEVEL_LABEL, JSON.stringify(newLevel));
+		setData(Utils.generateGameData(newLevel));
+		Utils.saveLevel(newLevel);
 	};
 
 	const onGameStart = () => {
@@ -117,60 +85,17 @@ function app(props) {
 		}
 	};
 
-	const setMines = (x, y) => {
+	const setMines = (startX, startY) => {
 		const { cols, rows } = level;
 		let { mines } = level;
 		while (mines > 0) {
 			const randX = Utils.random(cols - 1);
 			const randY = Utils.random(rows - 1);
-			if (randX !== x && randY !== y && data[randY][randX].number > -1) {
+			if (randX !== startX && randY !== startY && data[randY][randX].number > -1) {
 				data[randY][randX].number = -1;
 				mines--;
 			}
 		}
-	};
-
-	const getNeighbors = (cell, gameData) => {
-		const neighbors = [];
-		const hasTop = cell.y > 0;
-		const hasBottom = cell.y < (level.rows - 1);
-		const hasLeft = cell.x > 0;
-		const hasRight = cell.x < (level.cols - 1);
-		if (hasTop) {
-			const yTop = cell.y - 1;
-			// top
-			neighbors.push(gameData[yTop][cell.x]);
-			// top left
-			if (hasLeft) {
-				neighbors.push(gameData[yTop][cell.x - 1]);
-			}
-			// top right
-			if (hasRight) {
-				neighbors.push(gameData[yTop][cell.x + 1]);
-			}
-		}
-		// left
-		if (hasLeft) {
-			neighbors.push(gameData[cell.y][cell.x - 1]);
-		}
-		// right
-		if (hasRight) {
-			neighbors.push(gameData[cell.y][cell.x + 1]);
-		}
-		if (hasBottom) {
-			const yBottom = cell.y + 1;
-			// bottom
-			neighbors.push(gameData[yBottom][cell.x]);
-			// bottom left
-			if (hasLeft) {
-				neighbors.push(gameData[yBottom][cell.x - 1]);
-			}
-			// bottom right
-			if (hasRight) {
-				neighbors.push(gameData[yBottom][cell.x + 1]);
-			}
-		}
-		return neighbors;
 	};
 
 	const setValues = (gameData) => {
@@ -178,25 +103,19 @@ function app(props) {
 			for (let x = 0; x < gameData[y].length; x++) {
 				if (gameData[y][x].number > -1) {
 					/* eslint-disable no-param-reassign */
-					gameData[y][x].number = getNeighbors(gameData[y][x], gameData).reduce((acc, n) => {
-						return acc + ((n.number === -1) ? 1 : 0);
-					}, 0);
+					gameData[y][x].number = Utils.getNeighbors(level, gameData[y][x], gameData)
+						.reduce((acc, n) => (acc + (Utils.isMine(n) ? 1 : 0)), 0);
 					/* eslint-enable no-param-reassign */
 				}
 			}
 		}
 	};
 
-	const getNonMineNeighbors = (cell, gameData) => {
-		return getNeighbors(cell, gameData).filter((c) => c.number !== -1 && !c.isRevealed && !c.isFlagged);
-	};
-
 	const spreadClick = (cell, gameData) => {
-		// console.log('spreadClick', cell, gameData);
-		getNonMineNeighbors(cell, gameData).forEach((c) => {
+		Utils.getNonMineNeighbors(level, cell, gameData).forEach((c) => {
 			/* eslint-disable no-param-reassign */
 			gameData[c.y][c.x].isRevealed = true;
-			if (c.number === 0) {
+			if (Utils.isEmpty(c)) {
 				spreadClick(c, gameData);
 			}
 			/* eslint-enable no-param-reassign */
@@ -219,24 +138,22 @@ function app(props) {
 		if (!isGameOver) {
 			const cell = data[y][x];
 			if (clicks === 0) {
-				console.log('first click! set cell data, can\'t have a mine on first click...');
+				console.log('First click! set cell data, can\'t have a mine on first click...');
 				setMines(x, y);
 				setValues(data);
 			}
 			console.log('clicked', x, y, cell, clicks);
 			if (!cell.isFlagged) {
-				if (cell.number === -1) {
-					// lose
+				if (Utils.isMine(cell)) {
 					console.error(MINE.repeat(3), 'GAME OVER', MINE.repeat(3));
 					data[y][x].triggered = true;
 					endGame();
 				} else {
 					data[y][x].isRevealed = true;
-					if (cell.number === 0) {
+					if (Utils.isEmpty(cell)) {
 						spreadClick(cell, data);
 					}
 				}
-				// todo spread open 0s
 				setData(data);
 				if (clicks === 0) {
 					startGame();
