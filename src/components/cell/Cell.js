@@ -1,4 +1,5 @@
 import React from 'react';
+import { FLAG, ERROR, MINE } from '../../icons';
 import './Cell.css';
 
 function cell(props) {
@@ -13,10 +14,12 @@ function cell(props) {
 	} = props;
 
 	const getValue = (number, isFlagged) => {
-		if (isFlagged) {
-			return (<span role="img" aria-label="flag">🚩</span>);
+		if (isFlagged && number !== -1) {
+			return (<span role="img" aria-label="error">{ERROR}</span>);
+		} else if (isFlagged) {
+			return (<span role="img" aria-label="flag">{FLAG}</span>);
 		} else if (number === -1) {
-			return (<span role="img" aria-label="mine">💣</span>);
+			return (<span role="img" aria-label="mine">{MINE}</span>);
 		} else if (number < 9 && number > 0) {
 			return number;
 		} else {
@@ -28,7 +31,7 @@ function cell(props) {
 		return (e.type === 'click' && (e.button === 2 || e.which === 3));
 	}
 
-	console.log('-- cell render', y, x);
+	// console.log('-- cell render', y, x);
 	return (
 		<div className={`cell ${triggered ? 'cell-triggered' : ''}`}
 			data-number={number}

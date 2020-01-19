@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FLAG, MINE } from './icons';
 import './App.css';
 
 import Menu from './components/menu/Menu';
@@ -19,7 +20,10 @@ if (savedLevel) {
 		savedLevel = null;
 	}
 }
+
 const initialLevel = savedLevel || defaultLevel;
+let timerInterval = null;
+let startTime = null;
 
 const generateGameData = (level) => {
 	const cellData = [];
@@ -47,10 +51,10 @@ function app(props) {
 	const [isGameOver, setGameOver] = useState(false);
 	const [data, setData] = useState(generateGameData(initialLevel));
 
-	let timerInterval = null;
 
 	const onLevelChange = (newLevel) => {
 		console.log('level change', newLevel);
+		onNewGame();
 		setLevel(newLevel);
 		setData(generateGameData(newLevel));
 		localStorage.setItem(LEVEL_LABEL, JSON.stringify(newLevel));
@@ -58,8 +62,8 @@ function app(props) {
 
 	const onNewGame = () => {
 		console.log('new game');
-		endGame(false);
-		resetGame(startGame);
+		endGame();
+		resetGame();
 	};
 
 	const onGameStart = () => {
@@ -67,46 +71,50 @@ function app(props) {
 	};
 
 	const onMineFlag = (x, y) => {
-		console.log('@ flag', x, y);
-		const cell = data[y][x];
-		const wasFlagged = cell.isFlagged;
-		if (!cell.isRevealed) {
-			data[y][x].isFlagged = !wasFlagged;
-			const countStep = (wasFlagged) ? -1 : 1;
-			setMinesFlagged(minesFlagged + countStep);
-			setData(data);
-			if (minesFlagged === level.mines) {
-				endGame(true);
+		if (!isGameOver) {
+			console.log(FLAG, x, y);
+			const cell = data[y][x];
+			const wasFlagged = cell.isFlagged;
+			if (!cell.isRevealed) {
+				data[y][x].isFlagged = !wasFlagged;
+				const minesFlaggedCount = minesFlagged + ((wasFlagged) ? -1 : 1);
+				setMinesFlagged(minesFlaggedCount);
+				setData(data);
+				if (minesFlaggedCount === level.mines) {
+					endGame();
+				}
 			}
 		}
 	};
 
 	const onCellClick = (x, y) => {
-		const cell = data[y][x];
-		if (clicks === 0) {
-			console.log('first click! set cell data, can\'t have a mine on first click...');
-			setMines(x, y);
-			setValues(data);
-		}
-		setClicks(clicks + 1);
-		console.log('clicked', x, y, cell, clicks);
-		if (!cell.isFlagged) {
-			if (cell.number === -1) {
-				// lose
-				console.error('bombs away');
-				data[y][x].triggered = true;
-				endGame(true);
-			} else {
-				data[y][x].isRevealed = true;
-				if (cell.number === 0) {
-					spreadClick(cell, data);
+		if (!isGameOver) {
+			const cell = data[y][x];
+			if (clicks === 0) {
+				console.log('first click! set cell data, can\'t have a mine on first click...');
+				setMines(x, y);
+				setValues(data);
+			}
+			console.log('clicked', x, y, cell, clicks);
+			if (!cell.isFlagged) {
+				if (cell.number === -1) {
+					// lose
+					console.error(MINE.repeat(3), 'GAME OVER', MINE.repeat(3));
+					data[y][x].triggered = true;
+					endGame();
+				} else {
+					data[y][x].isRevealed = true;
+					if (cell.number === 0) {
+						spreadClick(cell, data);
+					}
+				}
+				// todo spread open 0s
+				setData(data);
+				if (clicks === 0) {
+					startGame();
 				}
 			}
-			// todo spread open 0s
-			setData(data);
-			if (clicks === 1) {
-				startGame();
-			}
+			setClicks(clicks + 1);
 		}
 	};
 
@@ -129,7 +137,6 @@ function app(props) {
 					data[y][x].number = getNeighbors(data[y][x], data).reduce((acc, n) => {
 						return acc + ((n.number === -1) ? 1 : 0);
 					}, 0);
-					console.log('Set Value', y, x, data[y][x].number)
 				}
 			}
 		}
@@ -193,19 +200,22 @@ function app(props) {
 	};
 
 	const startGame = () => {
-		console.log('start game');
-		if (!isGameOver && !timerInterval) {
+		console.log('** start game **');
+		if (!isGameOver && !timerInterval && !startTime) {
+			startTime = Date.now();
+			clearInterval(timerInterval);
 			timerInterval = setInterval(() => {
-				const newTime = timeElapsed + 1;
+				const newTime = Math.floor((Date.now() - startTime) / 1000);
 				setTimeElapsed(Math.min(newTime, 999));
 			}, 1000);
 		}
 	};
 
 	const endGame = () => {
-		console.log('end game');
+		console.log('## end game ##');
 		clearInterval(timerInterval);
 		timerInterval = null;
+		startTime = null;
 		setGameOver(true);
 		reveal();
 	}
@@ -217,7 +227,9 @@ function app(props) {
 		setGameOver(false);
 		setClicks(0);
 		setData(generateGameData(level));
-		callback();
+		if (typeof callback === 'function') {
+			callback();
+		}
 	};
 
 	const reveal = () => {
