@@ -12,10 +12,10 @@ import Utils from './Utils';
 const defaultLevel = Levels.find((l) => l.name === 'Beginner');
 const LEVEL_LABEL = 'DEFAULT_LEVEL';
 
-let savedLevel = localStorage.getItem(LEVEL_LABEL);
+let savedLevel = null;
 if (savedLevel) {
 	try {
-		savedLevel = JSON.parse(savedLevel);
+		savedLevel = JSON.parse(localStorage.getItem(LEVEL_LABEL));
 	} catch (err) {
 		savedLevel = null;
 	}
