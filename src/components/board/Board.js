@@ -1,5 +1,5 @@
 import React from 'react';
-import './Board.css';
+import styled from '@emotion/styled';
 import Cell from '../cell/Cell';
 
 function board(props) {
@@ -18,7 +18,7 @@ function board(props) {
 
 	console.log('-- board render', rows, cols);
 	return (
-		<div className="board">
+		<div className={`${props.className} board`}>
 			{data.map((row, x) => {
 				return row.map((cell, y) => {
 					return (
@@ -38,4 +38,18 @@ function board(props) {
 	);
 }
 
-export default board;
+export default styled(board)`
+	border-bottom-color: var(--game-border-light);
+	border-left-color: var(--game-border-dark);
+	border-right-color: var(--game-border-light);
+	border-style: solid;
+	border-top-color: var(--game-border-dark);
+	border-width: 0.125rem;
+	font-size: 0;
+
+	& br {
+		width: 0;
+		height: 0;
+		display: block;
+	}
+`;

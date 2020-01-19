@@ -13,12 +13,10 @@ const defaultLevel = Levels.find((l) => l.name === 'Beginner');
 const LEVEL_LABEL = 'DEFAULT_LEVEL';
 
 let savedLevel = null;
-if (savedLevel) {
-	try {
-		savedLevel = JSON.parse(localStorage.getItem(LEVEL_LABEL));
-	} catch (err) {
-		savedLevel = null;
-	}
+try {
+	savedLevel = JSON.parse(localStorage.getItem(LEVEL_LABEL));
+} catch (err) {
+	savedLevel = null;
 }
 
 const initialLevel = savedLevel || defaultLevel;
@@ -43,7 +41,7 @@ const generateGameData = (level) => {
 	return cellData;
 };
 
-function app(props) {
+function app() {
 	const [level, setLevel] = useState(initialLevel);
 	const [minesFlagged, setMinesFlagged] = useState(0);
 	const [timeElapsed, setTimeElapsed] = useState(0);
