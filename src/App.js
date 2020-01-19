@@ -119,7 +119,7 @@ function app(props) {
 	};
 
 	const setMines = (x, y) => {
-		let {mines, cols, rows} = level;
+		let { mines, cols, rows } = level;
 		while (mines > 0) {
 			let randX = Utils.random(cols - 1);
 			let randY = Utils.random(rows - 1);
@@ -256,6 +256,7 @@ function app(props) {
 				<Board rows={level.rows}
 					cols={level.cols}
 					data={data}
+					isGameOver={isGameOver}
 					onCellClick={onCellClick}
 					onMineFlag={onMineFlag} />
 			</div>

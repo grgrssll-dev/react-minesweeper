@@ -10,11 +10,12 @@ function cell(props) {
 		number,
 		isFlagged,
 		isRevealed,
-		onCellClick
+		onCellClick,
+		isGameOver,
 	} = props;
 
-	const getValue = (number, isFlagged) => {
-		if (isFlagged && number !== -1) {
+	const getValue = () => {
+		if (isFlagged && number !== -1 && isGameOver) {
 			return (<span role="img" aria-label="error">{ERROR}</span>);
 		} else if (isFlagged) {
 			return (<span role="img" aria-label="flag">{FLAG}</span>);
@@ -46,7 +47,7 @@ function cell(props) {
 			<div className="cell--inner"
 				data-revealed={isRevealed}
 				data-flagged={isFlagged}>
-				{getValue(number, isFlagged)}
+				{getValue()}
 			</div>
 		</div>
 	);
