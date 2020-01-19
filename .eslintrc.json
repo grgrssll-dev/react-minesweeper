@@ -1,52 +1,61 @@
 {
-	"extends": [
-		"react-app",
-		"airbnb",
-		"plugin:jsx-a11y/recommended",
-		"prettier",
-		"prettier/react"
-	],
-	"plugins": [
-		"jsx-a11y",
-		"prettier"
-	],
-	"rules": {
-		"no-plusplus": 0,
-		"no-console": 0,
-		"no-bitwise": 0,
-		"no-else-return": 0,
-		"import/prefer-default-export": 0,
-		"max-len": [
-			"error",
-			{
-				"code": 120,
-				"ignoreComments": true,
-				"ignoreTrailingComments": true,
-				"ignoreUrls": true,
-				"ignoreStrings": true,
-				"ignoreTemplateLiterals": true,
-				"ignoreRegExpLiterals": true
-			}
-		],
-		"react/jsx-filename-extension": [
-			1,
-			{
-				"extensions": [
-					".js",
-					".jsx"
-				]
-			}
-		],
-		"padded-blocks": [
-			"error",
-			{
-				"blocks": "never",
-				"classes": "never",
-				"switches": "never"
-			},
-			{
-				"allowSingleLineBlocks": true
-			}
-		]
-	}
+  "extends": [
+    "react-app",
+    "airbnb",
+    "plugin:jsx-a11y/recommended",
+    "prettier",
+    "prettier/react"
+  ],
+  "plugins": ["jsx-a11y", "prettier"],
+  "rules": {
+    "no-plusplus": 0,
+    "no-console": 0,
+    "no-bitwise": 0,
+    "no-else-return": 0,
+    "import/prefer-default-export": 0,
+    "no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "_"
+      }
+    ],
+    "max-len": [
+      "error",
+      {
+        "code": 120,
+        "ignoreComments": true,
+        "ignoreTrailingComments": true,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true,
+        "ignoreRegExpLiterals": true
+      }
+    ],
+    "react/jsx-filename-extension": [
+      1,
+      {
+        "extensions": [".js", ".jsx"]
+      }
+    ],
+    "padded-blocks": [
+      "error",
+      {
+        "blocks": "never",
+        "classes": "never",
+        "switches": "never"
+      },
+      {
+        "allowSingleLineBlocks": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["*.test.js", "*.spec.js"],
+      "rules": {
+        "no-unused-expressions": "off",
+        "react/jsx-props-no-spreading": "off"
+      }
+    }
+  ]
 }
