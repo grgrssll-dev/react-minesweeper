@@ -3,14 +3,16 @@ import './Board.css';
 import Cell from '../cell/Cell';
 
 function board(props) {
-	const { rows, cols, data } = props;
+	const { rows, cols, data, isGameOver } = props;
 
 	const onCellClick = (isRightClick, x, y) => {
 		const { onCellClick, onMineFlag } = props;
-		if (isRightClick) {
-			onMineFlag(x, y);
-		} else {
-			onCellClick(x, y);
+		if (!isGameOver) {
+			if (isRightClick) {
+				onMineFlag(x, y);
+			} else {
+				onCellClick(x, y);
+			}
 		}
 	}
 
@@ -24,6 +26,7 @@ function board(props) {
 							triggered={cell.triggered}
 							x={cell.x}
 							y={cell.y}
+							isGameOver={isGameOver}
 							number={cell.number}
 							isFlagged={cell.isFlagged}
 							isRevealed={cell.isRevealed}

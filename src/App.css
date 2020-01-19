@@ -2,6 +2,7 @@
 	border: 0.0625rem var(--system-bg) solid;
 	display: inline-block;
 	width: auto;
+	user-select: none;
 }
 
 .app--game-wrapper {
