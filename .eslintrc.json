@@ -34,6 +34,16 @@
 				]
 			}
 		],
-		"padded-blocks": 0,
+		"padded-blocks": [
+			"error",
+			{
+				"blocks": "never",
+				"classes": "never",
+				"switches": "never"
+			},
+			{
+				"allowSingleLineBlocks": true
+			}
+		]
 	}
 }
