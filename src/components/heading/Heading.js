@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import styled from '@emotion/styled';
-
+import { SMILEY, SUNGLASSES } from '../../icons';
 import GameValue from '../gameValue/GameValue';
 
 function heading(props) {
@@ -27,7 +27,7 @@ function heading(props) {
 					<span className="heading__game-indicator"
 						role="img"
 						aria-label={isGameOver ? 'New Game' : 'Game in progress'}
-					>{isGameOver ? '😎' : '😀'}</span>
+					>{isGameOver ? SUNGLASSES : SMILEY}</span>
 				</button>
 			</div>
 			<div className="heading__time-elapsed">

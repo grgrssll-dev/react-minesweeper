@@ -15,7 +15,7 @@ function gameValue(props) {
 }
 
 gameValue.propTypes = {
-	value: PropTypes.string.isRequired,
+	value: PropTypes.number.isRequired,
 	className: PropTypes.string.isRequired,
 };
 
