@@ -23,13 +23,16 @@ function app(props) {
 	const [isGameOver, setGameOver] = useState(false);
 	const [data, setData] = useState(Utils.generateGameData(initialLevel));
 
-	const reveal = () => {
-		console.log('reveal board');
-		setGameOver(true);
-		setData(data.map((row) => row.map((cell) => ({
-			...cell,
-			isRevealed: true
-		}))));
+	const startGame = () => {
+		console.log('** start game **');
+		if (!isGameOver && !timerInterval && !startTime) {
+			startTime = Date.now();
+			clearInterval(timerInterval);
+			timerInterval = setInterval(() => {
+				const newTime = Math.floor((Date.now() - startTime) / 1000);
+				setTimeElapsed(Math.min(newTime, 999));
+			}, 1000);
+		}
 	};
 
 	const endGame = () => {
@@ -38,8 +41,11 @@ function app(props) {
 		timerInterval = null;
 		startTime = null;
 		setGameOver(true);
-		reveal();
-	}
+		setData(data.map((row) => row.map((cell) => ({
+			...cell,
+			isRevealed: true
+		}))));
+	};
 
 	const resetGame = () => {
 		console.log('reset game');
@@ -64,10 +70,6 @@ function app(props) {
 		Utils.saveLevel(newLevel);
 	};
 
-	const onGameStart = () => {
-		onNewGame();
-	};
-
 	const onMineFlag = (x, y) => {
 		if (!isGameOver) {
 			console.log(FLAG, x, y);
@@ -85,62 +87,13 @@ function app(props) {
 		}
 	};
 
-	const setMines = (startX, startY) => {
-		const { cols, rows } = level;
-		let { mines } = level;
-		while (mines > 0) {
-			const randX = Utils.random(cols - 1);
-			const randY = Utils.random(rows - 1);
-			if (randX !== startX && randY !== startY && data[randY][randX].number > -1) {
-				data[randY][randX].number = -1;
-				mines--;
-			}
-		}
-	};
-
-	const setValues = (gameData) => {
-		for (let y = 0; y < gameData.length; y++) {
-			for (let x = 0; x < gameData[y].length; x++) {
-				if (gameData[y][x].number > -1) {
-					/* eslint-disable no-param-reassign */
-					gameData[y][x].number = Utils.getNeighbors(level, gameData[y][x], gameData)
-						.reduce((acc, n) => (acc + (Utils.isMine(n) ? 1 : 0)), 0);
-					/* eslint-enable no-param-reassign */
-				}
-			}
-		}
-	};
-
-	const spreadClick = (cell, gameData) => {
-		Utils.getNonMineNeighbors(level, cell, gameData).forEach((c) => {
-			/* eslint-disable no-param-reassign */
-			gameData[c.y][c.x].isRevealed = true;
-			if (Utils.isEmpty(c)) {
-				spreadClick(c, gameData);
-			}
-			/* eslint-enable no-param-reassign */
-		});
-	};
-
-	const startGame = () => {
-		console.log('** start game **');
-		if (!isGameOver && !timerInterval && !startTime) {
-			startTime = Date.now();
-			clearInterval(timerInterval);
-			timerInterval = setInterval(() => {
-				const newTime = Math.floor((Date.now() - startTime) / 1000);
-				setTimeElapsed(Math.min(newTime, 999));
-			}, 1000);
-		}
-	};
-
 	const onCellClick = (x, y) => {
 		if (!isGameOver) {
 			const cell = data[y][x];
 			if (clicks === 0) {
 				console.log('First click! set cell data, can\'t have a mine on first click...');
-				setMines(x, y);
-				setValues(data);
+				Utils.setMines(level, x, y);
+				Utils.setValues(level, data);
 			}
 			console.log('clicked', x, y, cell, clicks);
 			if (!cell.isFlagged) {
@@ -151,7 +104,7 @@ function app(props) {
 				} else {
 					data[y][x].isRevealed = true;
 					if (Utils.isEmpty(cell)) {
-						spreadClick(cell, data);
+						Utils.spreadClick(level, cell, data);
 					}
 				}
 				setData(data);
@@ -173,7 +126,7 @@ function app(props) {
 			<div className="app__game-wrapper" data-game-over={isGameOver}>
 				<Heading minesRemaining={level.mines - minesFlagged}
 					timeElapsed={timeElapsed}
-					onGameStart={onGameStart}
+					onGameStart={onNewGame}
 					isGameOver={isGameOver} />
 				<Board rows={level.rows}
 					cols={level.cols}
