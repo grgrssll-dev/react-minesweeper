@@ -170,10 +170,27 @@ const spreadClick = (level, cell, gameData) => {
 		/* eslint-disable no-param-reassign */
 		gameData[c.y][c.x].isRevealed = true;
 		if (isEmpty(c)) {
-			spreadClick(c, gameData);
+			spreadClick(level, c, gameData);
 		}
 		/* eslint-enable no-param-reassign */
 	});
+};
+
+
+const publish = (type, data = {}) => {
+	if (window.dispatchEvent) {
+		window.dispatchEvent(new CustomEvent(type, data));
+	} else {
+		throw new Error('Missing window.dispatch');
+	}
+};
+
+const subscribe = (type, handler) => {
+	window.addEventListener(type, handler);
+};
+
+const unsubscribe = (type, handler) => {
+	window.removeEventListener(type, handler);
 };
 
 const Utils = {
@@ -188,6 +205,9 @@ const Utils = {
 	isEmpty,
 	getNeighbors,
 	getNonMineNeighbors,
+	publish,
+	subscribe,
+	unsubscribe,
 };
 
 export default Utils;

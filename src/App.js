@@ -9,16 +9,16 @@ import Board from './components/board/Board';
 
 import Levels from './Levels';
 import Utils from './Utils';
+import { EVENT_GAME_START, EVENT_GAME_END } from './Events';
 
 const initialLevel = Utils.getSavedLevel() || Levels.find((l) => l.name === 'Beginner');
-let timerInterval = null;
-let startTime = null;
+// let timerInterval = null;
+// let startTime = null;
 
 function app(props) {
 	const { className } = props;
 	const [level, setLevel] = useState(initialLevel);
 	const [minesFlagged, setMinesFlagged] = useState(0);
-	const [timeElapsed, setTimeElapsed] = useState(0);
 	const [clicks, setClicks] = useState(0);
 	const [isGameOver, setGameOver] = useState(false);
 	const [data, setData] = useState(Utils.generateGameData(initialLevel));
@@ -26,21 +26,14 @@ function app(props) {
 
 	const startGame = () => {
 		console.log('** start game **');
-		if (!isGameOver && !timerInterval && !startTime) {
-			startTime = Date.now();
-			clearInterval(timerInterval);
-			timerInterval = setInterval(() => {
-				const newTime = Math.floor((Date.now() - startTime) / 1000);
-				setTimeElapsed(Math.min(newTime, 999));
-			}, 1000);
+		if (!isGameOver) {
+			Utils.publish(EVENT_GAME_START, { detail: Date.now() })
 		}
 	};
 
 	const endGame = () => {
 		console.log('## end game ##');
-		clearInterval(timerInterval);
-		timerInterval = null;
-		startTime = null;
+		Utils.publish(EVENT_GAME_END)
 		setGameOver(true);
 		setData(data.map((row) => row.map((cell) => ({
 			...cell,
@@ -51,7 +44,7 @@ function app(props) {
 	const resetGame = () => {
 		console.log('reset game');
 		setMinesFlagged(0);
-		setTimeElapsed(0);
+		Utils.publish(EVENT_GAME_END, { detail: 'reset' })
 		setGameOver(false);
 		setClicks(0);
 		setData(Utils.generateGameData(level));
@@ -126,9 +119,8 @@ function app(props) {
 				onNewGame={onNewGame} />
 			<div className="app__game-wrapper" data-game-over={isGameOver}>
 				<Heading minesRemaining={level.mines - minesFlagged}
-					timeElapsed={timeElapsed}
-					onGameStart={onNewGame}
-					isGameOver={isGameOver} />
+					isGameOver={isGameOver}
+					onNewGame={onNewGame} />
 				<Board rows={level.rows}
 					cols={level.cols}
 					data={data}

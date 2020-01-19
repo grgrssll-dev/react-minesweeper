@@ -1,18 +1,50 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import styled from '@emotion/styled';
 import { SMILEY, SUNGLASSES } from '../../icons';
+import Utils from '../../Utils';
 import GameValue from '../gameValue/GameValue';
+import { EVENT_GAME_START, EVENT_GAME_END } from '../../Events';
+
+let startTime = null;
+let timerInterval = null;
 
 function heading(props) {
 	console.log('-- heading render');
 	const {
 		minesRemaining,
-		timeElapsed,
 		isGameOver,
-		onGameStart,
+		onNewGame,
 		className,
 	} = props;
+
+	const [time, setTime] = useState(0);
+
+	const onGameStart = (e) => {
+		startTime = e.detail;
+		clearInterval(timerInterval);
+		timerInterval = setInterval(() => {
+			const newTime = Math.floor((Date.now() - startTime) / 1000);
+			setTime(Math.min(newTime, 999));
+		}, 1000);
+	};
+
+	const onGameEnd = (e) => {
+		startTime = null;
+		clearInterval(timerInterval);
+		if (e.detail === 'reset') {
+			setTime(0);
+		}
+	};
+
+	useEffect(() => {
+		Utils.subscribe(EVENT_GAME_START, onGameStart);
+		Utils.subscribe(EVENT_GAME_END, onGameEnd);
+		return function cleanup() {
+			Utils.unsubscribe(EVENT_GAME_START, onGameStart);
+			Utils.unsubscribe(EVENT_GAME_END, onGameEnd);
+		};
+	}, [startTime]);
 
 	return (
 		<div className={`${className} heading`}>
@@ -22,7 +54,7 @@ function heading(props) {
 			<div className="heading__spread">
 				<button
 					className="heading__game-button"
-					onClick={onGameStart}
+					onClick={onNewGame}
 					type="button">
 					<span className="heading__game-indicator"
 						role="img"
@@ -31,7 +63,7 @@ function heading(props) {
 				</button>
 			</div>
 			<div className="heading__time-elapsed">
-				<GameValue value={timeElapsed} />
+				<GameValue value={time} />
 			</div>
 		</div >
 	);
@@ -39,9 +71,8 @@ function heading(props) {
 
 heading.propTypes = {
 	minesRemaining: PropTypes.number.isRequired,
-	timeElapsed: PropTypes.number.isRequired,
 	isGameOver: PropTypes.bool.isRequired,
-	onGameStart: PropTypes.func.isRequired,
+	onNewGame: PropTypes.func.isRequired,
 	className: PropTypes.string.isRequired,
 };
 
