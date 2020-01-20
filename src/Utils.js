@@ -65,6 +65,17 @@ const getNonMineNeighbors = (level, cell, gameData) => {
 };
 
 /**
+ * Gets surrounding cells that are not revealed or flagged where available
+ * @param level
+ * @param cell
+ * @param gameData
+ */
+const getClearableNeighbors = (level, cell, gameData) => {
+	return (getNeighbors(level, cell, gameData)
+		.filter((c) => (!c.isRevealed && !c.isFlagged)));
+};
+
+/**
  * Creates cells for game based on level's board size
  */
 const generateGameData = (level) => {
@@ -176,6 +187,28 @@ const spreadClick = (level, cell, gameData) => {
 	});
 };
 
+/**
+ * Clears non mine areas
+ * @param level
+ * @param cell
+ * @param gameData
+ * @param onMine
+ */
+const spreadClear = (level, cell, gameData, onMine, ) => {
+	console.log('spread', cell.x, cell.y);
+	getClearableNeighbors(level, cell, gameData).forEach((c) => {
+		console.log('neightbor', c.x, c.y, c.number);
+		/* eslint-disable no-param-reassign */
+		gameData[c.y][c.x].isRevealed = true;
+		if (isMine(c)) {
+			onMine(cell.x, cell.y);
+		} else if (isEmpty(c)) {
+			spreadClear(level, c, gameData, onMine);
+		}
+		/* eslint-enable no-param-reassign */
+	});
+};
+
 
 const publish = (type, data = {}) => {
 	if (window.dispatchEvent) {
@@ -197,6 +230,7 @@ const Utils = {
 	setMines,
 	setValues,
 	spreadClick,
+	spreadClear,
 	getSavedLevel,
 	saveLevel,
 	random,
@@ -205,6 +239,7 @@ const Utils = {
 	isEmpty,
 	getNeighbors,
 	getNonMineNeighbors,
+	getClearableNeighbors,
 	publish,
 	subscribe,
 	unsubscribe,

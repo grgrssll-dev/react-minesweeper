@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import styled from '@emotion/styled';
 import { FLAG, ERROR, MINE } from '../../icons';
 
+const Buttons = {
+	LEFT_CLICK: 0,
+	RIGHT_CLICK: 2,
+};
+
 function cell(props) {
+	const [isRightDown, setRightDown] = useState(false);
+	const [didLeftClick, setDidLeftClick] = useState(false);
+
 	const {
 		triggered,
 		x,
@@ -12,6 +20,7 @@ function cell(props) {
 		isFlagged,
 		isRevealed,
 		onCellClick,
+		onClearCell,
 		isGameOver,
 		className,
 	} = props;
@@ -28,23 +37,61 @@ function cell(props) {
 		} else {
 			return ' ';
 		}
-	}
+	};
 
-	const isRightClick = (e) => {
-		return (e.type === 'click' && (e.button === 2 || e.which === 3));
-	}
+	const onMouseDown = (e) => {
+		switch (e.button) {
+			case Buttons.LEFT_CLICK:
+				// setLeftDown(true);
+				break;
+			case Buttons.RIGHT_CLICK:
+				setRightDown(true);
+				break;
+			default:
+				break;
+		}
+		// console.log('DOWN', e.button, e.buttons, e.which, e.altKey, e.ctrlKey, e.metaKey);
+	};
+
+	const onMouseUp = (e) => {
+		switch (e.button) {
+			case Buttons.LEFT_CLICK:
+				if (isRightDown) {
+					setDidLeftClick(true);
+					console.log('Will Do Click Spread');
+				} else {
+					setDidLeftClick(true);
+					onCellClick(false, x, y)
+				}
+				break;
+			case Buttons.RIGHT_CLICK:
+				if (didLeftClick) {
+					console.log('Do Click Spread');
+					onClearCell(x, y);
+				} else {
+					onCellClick(true, x, y)
+				}
+				setRightDown(false);
+				setDidLeftClick(false);
+				break;
+			default:
+				break;
+		}
+		console.log('UP', e.button, e.buttons, e.which, e.altKey, e.ctrlKey, e.metaKey);
+	};
 
 	// console.log('-- cell render', y, x);
 	return (
 		<button className={`${className} cell ${triggered ? 'cell--triggered' : ''}`}
 			type="button"
 			data-number={number}
-			onClick={(e) => {
-				onCellClick(isRightClick(e), x, y);
-				e.preventDefault();
+			onMouseDown={(e) => {
+				onMouseDown(e);
+			}}
+			onMouseUp={(e) => {
+				onMouseUp(e);
 			}}
 			onContextMenu={(e) => {
-				onCellClick(true, x, y);
 				e.preventDefault();
 			}}>
 			<span className="cell__inner"
@@ -64,6 +111,7 @@ cell.propTypes = {
 	isFlagged: PropTypes.bool.isRequired,
 	isRevealed: PropTypes.bool.isRequired,
 	onCellClick: PropTypes.func.isRequired,
+	onClearCell: PropTypes.func.isRequired,
 	isGameOver: PropTypes.bool.isRequired,
 	className: PropTypes.string.isRequired,
 };
