@@ -110,6 +110,27 @@ function app(props) {
 		}
 	};
 
+	const onClearCell = (x, y) => {
+		if (!isGameOver && clicks > 0) {
+			const cell = data[y][x];
+			if (!cell.isRevealed || cell.isFlagged) {
+				return;
+			}
+			const onMine = (mineX, mineY) => {
+				console.error(MINE.repeat(3), 'GAME OVER', MINE.repeat(3));
+				data[mineY][mineX].triggered = true;
+				endGame();
+			};
+			if (Utils.isMine(cell)) {
+				onMine(x, y);
+			} else {
+				Utils.spreadClear(level, cell, data, onMine);
+			}
+			setData(data);
+			setClicks(clicks + 1); // hack to force render
+		}
+	};
+
 	console.log('-- app render');
 	return (
 		<div className={`${className} app app--${level.name.toLowerCase()}`}>
@@ -124,6 +145,7 @@ function app(props) {
 				<Board rows={level.rows}
 					cols={level.cols}
 					data={data}
+					onClearCell={onClearCell}
 					isGameOver={isGameOver}
 					onCellClick={onCellClick}
 					onMineFlag={onMineFlag} />

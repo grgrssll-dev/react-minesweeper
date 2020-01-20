@@ -11,6 +11,7 @@ function board(props) {
 		data,
 		onCellClick,
 		onMineFlag,
+		onClearCell,
 		isGameOver,
 		className,
 	} = props;
@@ -40,7 +41,8 @@ function board(props) {
 							number={cell.number}
 							isFlagged={cell.isFlagged}
 							isRevealed={cell.isRevealed}
-							onCellClick={onClick} />
+							onCellClick={onClick}
+							onClearCell={onClearCell} />
 					);
 				}).concat((<br key={`br-${x}`} />));
 			})}
@@ -55,6 +57,7 @@ board.propTypes = {
 	data: PropTypes.arrayOf(PropTypes.arrayOf(cellDataType)).isRequired,
 	onCellClick: PropTypes.func.isRequired,
 	onMineFlag: PropTypes.func.isRequired,
+	onClearCell: PropTypes.func.isRequired,
 	isGameOver: PropTypes.bool.isRequired,
 	className: PropTypes.string.isRequired,
 }
