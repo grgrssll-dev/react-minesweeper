@@ -6,6 +6,5 @@ Try it out https://www.grgrssll.com/minesweeper/
 
 TODO
 
-- write tests
-- double button click clear behavior
-- rework to not render so much
+- write more tests
+- make best times screen
