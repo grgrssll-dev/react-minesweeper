@@ -195,9 +195,7 @@ const spreadClick = (level, cell, gameData) => {
  * @param onMine
  */
 const spreadClear = (level, cell, gameData, onMine, ) => {
-	console.log('spread', cell.x, cell.y);
 	getClearableNeighbors(level, cell, gameData).forEach((c) => {
-		console.log('neightbor', c.x, c.y, c.number);
 		/* eslint-disable no-param-reassign */
 		gameData[c.y][c.x].isRevealed = true;
 		if (isMine(c)) {
