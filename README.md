@@ -8,3 +8,4 @@ TODO
 
 - write more tests
 - make best times screen
+- better way to tell if won/lost when game over
