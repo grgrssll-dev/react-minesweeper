@@ -12,8 +12,6 @@ import Utils from './Utils';
 import { EVENT_GAME_START, EVENT_GAME_END } from './Events';
 
 const initialLevel = Utils.getSavedLevel() || Levels.find((l) => l.name === 'Beginner');
-// let timerInterval = null;
-// let startTime = null;
 
 function app(props) {
 	const { className } = props;
@@ -66,18 +64,24 @@ function app(props) {
 
 	const onMineFlag = (x, y) => {
 		if (!isGameOver) {
-			console.log(FLAG, x, y);
+			if (clicks === 0) {
+				console.log('First click! set cell data, can\'t have a mine on first click...');
+				Utils.setMines(level, x, y, data);
+				Utils.setValues(level, data);
+			}
 			const cell = data[y][x];
 			const wasFlagged = cell.isFlagged;
+			console.log(FLAG, x, y, minesFlagged, cell.isFlagged);
 			if (!cell.isRevealed) {
 				data[y][x].isFlagged = !wasFlagged;
 				const minesFlaggedCount = minesFlagged + ((wasFlagged) ? -1 : 1);
 				setMinesFlagged(minesFlaggedCount);
-				setData(data);
+				setData(Array.from(data));
 				if (minesFlaggedCount === level.mines) {
 					endGame();
 				}
 			}
+			setClicks(clicks + 1);
 		}
 	};
 
@@ -101,7 +105,7 @@ function app(props) {
 						Utils.spreadClick(level, cell, data);
 					}
 				}
-				setData(data);
+				setData(Array.from(data));
 				if (clicks === 0) {
 					startGame();
 				}
@@ -117,21 +121,21 @@ function app(props) {
 				return;
 			}
 			const onMine = (mineX, mineY) => {
-				console.error(MINE.repeat(3), 'GAME OVER', MINE.repeat(3));
-				data[mineY][mineX].triggered = true;
+				console.error(MINE.repeat(3), 'GAME OVER', MINE.repeat(3), mineX, mineY);
 				endGame();
 			};
 			if (Utils.isMine(cell)) {
+				data[y][x].triggered = true;
 				onMine(x, y);
 			} else {
 				Utils.spreadClear(level, cell, data, onMine);
 			}
-			setData(data);
-			setClicks(clicks + 1); // hack to force render
+			setData(Array.from(data));
+			// setClicks(clicks + 1); // hack to force render
 		}
 	};
 
-	console.log('-- app render');
+	console.log('-- app render', minesFlagged, level.mines);
 	return (
 		<div className={`${className} app app--${level.name.toLowerCase()}`}>
 			<Menu levels={Levels}
@@ -146,9 +150,9 @@ function app(props) {
 					cols={level.cols}
 					data={data}
 					onClearCell={onClearCell}
-					isGameOver={isGameOver}
 					onCellClick={onCellClick}
-					onMineFlag={onMineFlag} />
+					onMineFlag={onMineFlag}
+					isGameOver={isGameOver} />
 			</div>
 		</div>
 	);

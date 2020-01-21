@@ -19,9 +19,10 @@ function cell(props) {
 		number,
 		isFlagged,
 		isRevealed,
-		onCellClick,
-		onClearCell,
 		isGameOver,
+		onCellClick,
+		onMineFlag,
+		onClearCell,
 		className,
 	} = props;
 
@@ -42,7 +43,7 @@ function cell(props) {
 	const onMouseDown = (e) => {
 		switch (e.button) {
 			case Buttons.LEFT_CLICK:
-				// setLeftDown(true);
+				setDidLeftClick(true);
 				break;
 			case Buttons.RIGHT_CLICK:
 				setRightDown(true);
@@ -57,11 +58,11 @@ function cell(props) {
 		switch (e.button) {
 			case Buttons.LEFT_CLICK:
 				if (isRightDown) {
-					setDidLeftClick(true);
+					// setDidLeftClick(true);
 					console.log('Will Do Click Spread');
 				} else {
-					setDidLeftClick(true);
-					onCellClick(false, x, y)
+					// setDidLeftClick(true);
+					onCellClick(x, y)
 				}
 				break;
 			case Buttons.RIGHT_CLICK:
@@ -69,7 +70,7 @@ function cell(props) {
 					console.log('Do Click Spread');
 					onClearCell(x, y);
 				} else {
-					onCellClick(true, x, y)
+					onMineFlag(x, y)
 				}
 				setRightDown(false);
 				setDidLeftClick(false);
@@ -77,23 +78,18 @@ function cell(props) {
 			default:
 				break;
 		}
-		console.log('UP', e.button, e.buttons, e.which, e.altKey, e.ctrlKey, e.metaKey);
+		// console.log('UP', e.button, e.buttons, e.which, e.altKey, e.ctrlKey, e.metaKey);
 	};
 
-	// console.log('-- cell render', y, x);
+	console.log('-- cell render');
+	const triggeredClass = triggered ? 'cell--triggered' : '';
 	return (
-		<button className={`${className} cell ${triggered ? 'cell--triggered' : ''}`}
+		<button className={`${className} cell ${triggeredClass}`}
 			type="button"
 			data-number={number}
-			onMouseDown={(e) => {
-				onMouseDown(e);
-			}}
-			onMouseUp={(e) => {
-				onMouseUp(e);
-			}}
-			onContextMenu={(e) => {
-				e.preventDefault();
-			}}>
+			onMouseDown={onMouseDown}
+			onMouseUp={onMouseUp}
+			onContextMenu={(e) => e.preventDefault()}>
 			<span className="cell__inner"
 				data-revealed={isRevealed}
 				data-flagged={isFlagged}>
@@ -110,9 +106,10 @@ cell.propTypes = {
 	number: PropTypes.number.isRequired,
 	isFlagged: PropTypes.bool.isRequired,
 	isRevealed: PropTypes.bool.isRequired,
-	onCellClick: PropTypes.func.isRequired,
-	onClearCell: PropTypes.func.isRequired,
 	isGameOver: PropTypes.bool.isRequired,
+	onCellClick: PropTypes.func.isRequired,
+	onMineFlag: PropTypes.func.isRequired,
+	onClearCell: PropTypes.func.isRequired,
 	className: PropTypes.string.isRequired,
 };
 
@@ -204,5 +201,12 @@ export default styled(cell)`
 	&.cell--triggered .cell__inner {
 		border: 0;
 		background: var(--error);
+	}
+
+	&cell--depressed .cell__inner {
+		border-bottom-color: var(--game-border-light);
+		border-left-color: var(--game-border-dark);
+		border-right-color: var(--game-border-light);
+		border-top-color: var(--game-border-dark);
 	}
 `;
