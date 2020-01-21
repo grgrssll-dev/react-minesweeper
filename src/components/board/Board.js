@@ -16,16 +16,6 @@ function board(props) {
 		className,
 	} = props;
 
-	const onClick = (isRightClick, x, y) => {
-		if (!isGameOver) {
-			if (isRightClick) {
-				onMineFlag(x, y);
-			} else {
-				onCellClick(x, y);
-			}
-		}
-	}
-
 	console.log('-- board render', rows, cols);
 	/* eslint-disable react/no-array-index-key */
 	return (
@@ -41,7 +31,8 @@ function board(props) {
 							number={cell.number}
 							isFlagged={cell.isFlagged}
 							isRevealed={cell.isRevealed}
-							onCellClick={onClick}
+							onMineFlag={onMineFlag}
+							onCellClick={onCellClick}
 							onClearCell={onClearCell} />
 					);
 				}).concat((<br key={`br-${x}`} />));

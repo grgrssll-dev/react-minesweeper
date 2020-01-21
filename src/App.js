@@ -12,8 +12,6 @@ import Utils from './Utils';
 import { EVENT_GAME_START, EVENT_GAME_END } from './Events';
 
 const initialLevel = Utils.getSavedLevel() || Levels.find((l) => l.name === 'Beginner');
-// let timerInterval = null;
-// let startTime = null;
 
 function app(props) {
 	const { className } = props;
@@ -77,7 +75,6 @@ function app(props) {
 			if (!cell.isRevealed) {
 				data[y][x].isFlagged = !wasFlagged;
 				const minesFlaggedCount = minesFlagged + ((wasFlagged) ? -1 : 1);
-				console.log('fair game on flagging', minesFlagged, minesFlaggedCount);
 				setMinesFlagged(minesFlaggedCount);
 				setData(Array.from(data));
 				if (minesFlaggedCount === level.mines) {
@@ -124,11 +121,11 @@ function app(props) {
 				return;
 			}
 			const onMine = (mineX, mineY) => {
-				console.error(MINE.repeat(3), 'GAME OVER', MINE.repeat(3));
-				data[mineY][mineX].triggered = true;
+				console.error(MINE.repeat(3), 'GAME OVER', MINE.repeat(3), mineX, mineY);
 				endGame();
 			};
 			if (Utils.isMine(cell)) {
+				data[y][x].triggered = true;
 				onMine(x, y);
 			} else {
 				Utils.spreadClear(level, cell, data, onMine);

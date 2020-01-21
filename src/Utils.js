@@ -199,6 +199,7 @@ const spreadClear = (level, cell, gameData, onMine, ) => {
 		/* eslint-disable no-param-reassign */
 		gameData[c.y][c.x].isRevealed = true;
 		if (isMine(c)) {
+			gameData[c.y][c.x].triggered = true;
 			onMine(cell.x, cell.y);
 		} else if (isEmpty(c)) {
 			spreadClear(level, c, gameData, onMine);
