@@ -19,9 +19,9 @@ function cell(props) {
 		number,
 		isFlagged,
 		isRevealed,
+		isGameOver,
 		onCellClick,
 		onClearCell,
-		isGameOver,
 		className,
 	} = props;
 
@@ -42,7 +42,7 @@ function cell(props) {
 	const onMouseDown = (e) => {
 		switch (e.button) {
 			case Buttons.LEFT_CLICK:
-				// setLeftDown(true);
+				setDidLeftClick(true);
 				break;
 			case Buttons.RIGHT_CLICK:
 				setRightDown(true);
@@ -57,10 +57,8 @@ function cell(props) {
 		switch (e.button) {
 			case Buttons.LEFT_CLICK:
 				if (isRightDown) {
-					setDidLeftClick(true);
 					console.log('Will Do Click Spread');
 				} else {
-					setDidLeftClick(true);
 					onCellClick(false, x, y)
 				}
 				break;
@@ -77,10 +75,10 @@ function cell(props) {
 			default:
 				break;
 		}
-		console.log('UP', e.button, e.buttons, e.which, e.altKey, e.ctrlKey, e.metaKey);
+		// console.log('UP', e.button, e.buttons, e.which, e.altKey, e.ctrlKey, e.metaKey);
 	};
 
-	// console.log('-- cell render', y, x);
+	// console.log('-- cell render', x, y, number);
 	return (
 		<button className={`${className} cell ${triggered ? 'cell--triggered' : ''}`}
 			type="button"
@@ -110,12 +108,22 @@ cell.propTypes = {
 	number: PropTypes.number.isRequired,
 	isFlagged: PropTypes.bool.isRequired,
 	isRevealed: PropTypes.bool.isRequired,
+	isGameOver: PropTypes.bool.isRequired,
 	onCellClick: PropTypes.func.isRequired,
 	onClearCell: PropTypes.func.isRequired,
-	isGameOver: PropTypes.bool.isRequired,
 	className: PropTypes.string.isRequired,
 };
 
+// export default styled(React.memo(cell, (prevProps, nextProps) => (
+// 	!!prevProps.triggered === !!nextProps.triggered
+// 	&& +prevProps.x === +nextProps.x
+// 	&& +prevProps.y === +nextProps.y
+// 	&& +prevProps.number === +nextProps.number
+// 	&& !!prevProps.isFlagged === !!nextProps.isFlagged
+// 	&& !!prevProps.isRevealed === !!nextProps.isRevealed
+// 	&& !!prevProps.isGameOver === !!nextProps.isGameOver
+// 	&& prevProps.className === nextProps.className
+// )))`
 export default styled(cell)`
 	background: var(--game-bg);
 	box-sizing: border-box;
