@@ -9,3 +9,4 @@ TODO
 - write more tests
 - tweak cell clearing (click gesture) not sure if compliant behavior - needs cell depressing for adjacents - perhaps only when flagged adjacent mines matches number? what if over?
 - make best times screen
+- offline support
